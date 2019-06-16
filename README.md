@@ -2,9 +2,12 @@
 Purpose of this package is to simulate a given breeding strategy using a user specified genetic architecture.  There are a variety of adjustable paramters including mating strategies and selection methods which can be implemented over many generations.
 
 **Install**
+
 ```
-library(devtools)
-install_github("arfesta/SimBreeder")
+## Must have devtools
+#install.packages("devtools")
+
+devtools:install_github("arfesta/SimBreeder")
 ```
 
 # Table of contents:
