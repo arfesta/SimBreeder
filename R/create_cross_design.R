@@ -68,7 +68,7 @@ create_cross_design <- function(parent.info, prog.percross, generation,
       cross.design <- matrix(NA,nrow=1,ncol=2)
 
       for(i in 1:length(coancestry)){
-        new <- subset(melt(as.matrix(t(relationship.matrix))), value < coancestry[i])
+        new <- subset(reshape2::melt(as.matrix(t(relationship.matrix))), value < coancestry[i])
         matches1 <- match(new[,1],names(sorted.ebvs))
         matches2 <- match(new[,2],names(sorted.ebvs))
         a <- sorted.ebvs[matches1]
@@ -161,7 +161,7 @@ create_cross_design <- function(parent.info, prog.percross, generation,
       E <- upper.tri(relationship.matrix); relationship.matrix[E] <- NA
       coancestry <- seq(.01,1,.005)
       for(i in 1:length(coancestry)){
-        new <- subset(melt(as.matrix(t(relationship.matrix))), value < coancestry[i])
+        new <- subset(reshape2::melt(as.matrix(t(relationship.matrix))), value < coancestry[i])
         matches1 <- match(new[,1],names(parent.info$select.EBVs))
         matches2 <- match(new[,2],names(parent.info$select.EBVs))
         a <- parent.info$select.EBVs[matches1]
@@ -206,7 +206,7 @@ create_cross_design <- function(parent.info, prog.percross, generation,
         relationship.matrix <- relationship.matrix[,names(sorted.minimum)]
         E <- upper.tri(relationship.matrix)
         relationship.matrix[E] <- NA
-        new <- subset(melt(as.matrix(t(relationship.matrix))), value < coancest)
+        new <- subset(reshape2::melt(as.matrix(t(relationship.matrix))), value < coancest)
         matches1 <- match(new[,1],names(parent.info$select.EBVs))
         matches2 <- match(new[,2],names(parent.info$select.EBVs))
         a <- parent.info$select.EBVs[matches1]

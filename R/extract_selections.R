@@ -64,21 +64,21 @@ extract_selections <- function(num.cores=NULL, map.info, cross.design, past.tgv,
   # Create 2 objects which hold all markers and all phenotypes respectively
 
   if (generation==1) {
-    ped <- pedigree(label = full.ped[,1],sire = full.ped[,2],dam = full.ped[,3])
+    ped <- pedigree::pedigree(label = full.ped[,1],sire = full.ped[,2],dam = full.ped[,3])
     #all.markers <- rbind(parent.markers,)
     if(reduced){  all.phenos <- c(parent.info$phenos,progeny.phenos)
     all.genetic.vals <- c(parent.info$genetic.values,prog.genetic.values)
     } else { all.phenos <- c(past.phenos$phenos,progeny.phenos)
     all.genetic.vals <- c(past.phenos$genetic.values,prog.genetic.values)}
   } else {
-    ped <- pedigree(label = selection.ped[,1],sire = selection.ped[,2],dam = selection.ped[,3])
+    ped <- pedigree::pedigree(label = selection.ped[,1],sire = selection.ped[,2],dam = selection.ped[,3])
     #all.markers <- rbind(parent.markers,prog.markers)
     all.phenos <- c(parent.info$all.phenos,progeny.phenos)
     all.genetic.vals <- c(past.phenos$genetic.values,prog.genetic.values)
   }
 
   if (among.family.selection == "ABLUP"){
-    the.data <- as.big.matrix(as.matrix(getAInv(ped)))
+    the.data <- as.big.matrix(as.matrix(pedigreemm::getAInv(ped)))
     the.data = the.data[i=match(names(progeny.phenos),colnames(the.data)),j=match(names(progeny.phenos),colnames(the.data))]
     s <-  ncol(the.data)/8
     e <- s-1
@@ -337,7 +337,7 @@ extract_selections <- function(num.cores=NULL, map.info, cross.design, past.tgv,
     prog.2 <- prog.markers[,,2]; colnames(prog.2) <- names(progeny.phenos)
     #allele1 <- cbind(parentmarkers[,,1],prog.1)
     #allele2 <- cbind(parentmarkers[,,2],prog.2)
-    A <- (as.matrix(getA(ped)))
+    A <- (as.matrix(pedigreemm::getA(ped)))
     A = A[match(names(progeny.phenos),colnames(A)),match(names(progeny.phenos),colnames(A))]
     #this.order <- match(colnames(allele1),rownames(A))
     #A <- A[c(this.order),c(this.order)]
@@ -532,8 +532,8 @@ extract_selections <- function(num.cores=NULL, map.info, cross.design, past.tgv,
   # Calculate:
   #       Inbreding level of progeny/selections
   #       Genetic Variance of progeny and selections (Bulmer Effect)
-  f.ped <- pedigree(label = full.ped[,1],sire = full.ped[,2],dam = full.ped[,3])
-  pedigree.inbreeding <- inbreeding(f.ped)
+  f.ped <- pedigree::pedigree(label = full.ped[,1],sire = full.ped[,2],dam = full.ped[,3])
+  pedigree.inbreeding <- pedigreemm::inbreeding(f.ped)
   names(pedigree.inbreeding) <- full.ped[,1]
   progeny.inbreeding <- pedigree.inbreeding[prog.pedigree[,1]]
   selections.inbreeding <- progeny.inbreeding[names(the.selections)]
@@ -546,11 +546,11 @@ extract_selections <- function(num.cores=NULL, map.info, cross.design, past.tgv,
   result <- unlist(result)
 
   if(relationship.matrix.type == "pedigree"){
-    if(generation == 1){A <- as.matrix(getA(f.ped))
+    if(generation == 1){A <- as.matrix(pedigreemm::getA(f.ped))
     } else {
       selection.ped <- cross.design$selection.ped
-      s.ped <- pedigree(label = selection.ped[,1],sire = selection.ped[,2],dam = selection.ped[,3])
-      A <- as.matrix(getA(s.ped))}
+      s.ped <- pedigree::pedigree(label = selection.ped[,1],sire = selection.ped[,2],dam = selection.ped[,3])
+      A <- as.matrix(pedigreemm::getA(s.ped))}
     l <- match(names(selection.phenos), rownames(A))
     rel.mat <- A[l,l]
   }
