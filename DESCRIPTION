@@ -14,3 +14,7 @@ Imports:
     MatrixModels,
     reshape2,
     abind
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
