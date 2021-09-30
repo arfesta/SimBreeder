@@ -25,27 +25,28 @@ create_cross_design <- function(parent.info, prog.percross, generation,
                                 cross.file= NULL, save=F, parent.phenos = NULL){
   library(reshape2)
   coancest=NULL
-  num.parents=ncol((parent.info$genos.3d[,,1]))
-  parent.names <- colnames(parent.info$genos.3d)
-
+  if(length(dim(parent.info$genos.3d)) == 2){num.parents = 1; parent.names <- unique(parent.info$select.ped.ids)} else {
+    num.parents=ncol((parent.info$genos.3d[,,1]))
+    parent.names <- colnames(parent.info$genos.3d)}
+  
   if(mating.design == "Self"){
     par1 <- parent.names
     par2 <- parent.names
     prog.par <- rep(prog.percross,length(par1))
     cross.design <- cbind(par1,par2,prog.par)}
-
+  
   #Must be divisible by 4
   if(mating.design == "AssortiveMating"){
     total <- num.parents/4
     if(generation == 1){
-      if(use.par.marker.effects | use.op.par.phenos) {sorted.ebvs <- parent.info$pars
+      if(use.par.marker.effects | use.op.par.phenos) {sorted.ebvs <- parent.info$mean.parent.phenos
       } else {
-        if(length(parent.info$phenos) > 0) {sorted.ebvs <- parent.info$phenos
+        if(length(parent.info$phenos) > 0) {sorted.ebvs <- parent.info$selection.phenos
         } else {sorted.ebvs <- sort(parent.phenos$phenos,decreasing=T)}}
-
+      
       relationship.matrix <- as.data.frame(diag(1,nrow=num.parents,ncol=num.parents))
       colnames(relationship.matrix) <- names(sorted.ebvs); rownames(relationship.matrix) <- names(sorted.ebvs)
-
+      
       top.25 <- names(sorted.ebvs)[1:total]
       top.50 <- names(sorted.ebvs)[(total+1):(total*2)]
       bottom.50 <- names(sorted.ebvs)[(total*2+1):(total*3)]
@@ -58,15 +59,15 @@ create_cross_design <- function(parent.info, prog.percross, generation,
       bottom.50 <- names(sorted.ebvs)[(total*2+1):(total*3)]
       bottom.25 <- names(sorted.ebvs)[(total*3+1):(total*4)]
     }
-
+    
     all <- vector("list")
     for(i in 1:total){all[[i]] <- top.25[-i]}
-
+    
     if(coancest.thresh){
       E <- upper.tri(relationship.matrix); relationship.matrix[E] <- NA
       coancestry <- seq(.01,1,.005)
       cross.design <- matrix(NA,nrow=1,ncol=2)
-
+      #all.cross.mats <-  parallel::mclapply(1:length(coancestry),function(i){
       for(i in 1:length(coancestry)){
         new <- subset(reshape2::melt(as.matrix(t(relationship.matrix))), value < coancestry[i])
         matches1 <- match(new[,1],names(sorted.ebvs))
@@ -90,7 +91,7 @@ create_cross_design <- function(parent.info, prog.percross, generation,
           if(each == 1){cross.design <- cross.design[-1,]}
           new <- new[-c(which(new[,1] %in% this.cross[,1] & new[,2] %in% this.cross[,2] )),]
         }
-
+        
         top50.samp <-top.50
         for(each in 1:length(top.25)){
           par <- top.25[each]
@@ -105,22 +106,28 @@ create_cross_design <- function(parent.info, prog.percross, generation,
           new <- new[-c(which(new[,1] %in% this.cross[,1] & new[,2] %in% this.cross[,2] )),]
           top50.samp <- top50.samp[-c(which(top50.samp %in% this.cross[,1] | top50.samp %in% this.cross[,2]))]
         }
-
+        
         parent1.2.top25 <- sample(top.25,length(top.25),replace=F)
         parent2.2.bottom50 <- sample(bottom.50,length(top.25),replace=F)
         parent1.3.top50 <- sample(top.50,length(top.25),replace=F)
         parent2.3.bottom25 <- sample(bottom.25,length(top.25),replace=F)
         parent1.4.top50 <- sample(top.50,length(top.25),replace=F)
         parent2.4.bottom50 <- sample(bottom.50,length(top.25),replace=F)
-
+        
         all.other.crosses1 <- c(parent1.2.top25,parent1.3.top50,parent1.4.top50)
         all.other.crosses2 <- c(parent2.2.bottom50,parent2.3.bottom25,parent2.4.bottom50)
         all.other.crosses <- cbind(all.other.crosses1,all.other.crosses2)
-
+        
         colnames(all.other.crosses) <- c("V1","V2")
-        cross.design <- rbind(cross.design,all.other.crosses)
-        if(!anyNA(cross.design)){break}}
+        c <- rbind(cross.design,all.other.crosses)
+        if(anyNA(c)){cross.design <- NA} else {cross.design <- c}
+        if(anyNA(cross.design)){} else { break}
+      }
+      #},mc.cores=30)
+      #this.cross <- which(unlist(lapply(all.cross.mats,anyNA)) == F)[1]
+      #cross.design <-  all.cross.mats[[this.cross]]
       cross.design[,3] <- rep(prog.percross,nrow(cross.design))
+      coancest <- coancestry[i]
     } else {
       parent2 <- vector()
       for(each in 1:length(top.25)){
@@ -140,20 +147,20 @@ create_cross_design <- function(parent.info, prog.percross, generation,
       parent2.3.bottom25 <- sample(bottom.25,length(top.25),replace=F)
       parent1.4.top50 <- sample(top.50,length(top.25),replace=F)
       parent2.4.bottom50 <- sample(bottom.50,length(top.25),replace=F)
-
+      
       pars1 <- c(parent1.top25,parent1.1.top25,parent1.2.top25,parent1.3.top50,parent1.4.top50)
-
+      
       pars2 <- c(parent2.top25,parent2.1.top50,parent2.2.bottom50,parent2.3.bottom25,parent2.4.bottom50)
-
-
+      
+      
       cross.design <- cbind(par1=pars1,
                             par2=pars2,
                             prog=rep(prog.percross,length(pars1)))}}
-
+  
   if(mating.design == "RandomMating"){
     cross.design= matrix(sample(colnames(parent.info$genos.3d),replace=FALSE, size=num.parents),nrow = num.parents/2,ncol=2)
     cross.design <- cbind(cross.design,as.numeric(rep(prog.percross,length(cross.design[,1]))))}
-
+  
   if(mating.design == "SP" ){
     if(coancest.thresh){
       par1 <- vector(); par2 <- vector()
@@ -161,7 +168,7 @@ create_cross_design <- function(parent.info, prog.percross, generation,
       E <- upper.tri(relationship.matrix); relationship.matrix[E] <- NA
       coancestry <- seq(.01,1,.005)
       for(i in 1:length(coancestry)){
-        new <- subset(reshape2::melt(as.matrix(t(relationship.matrix))), value < coancestry[i])
+        new <- subset(melt(as.matrix(t(relationship.matrix))), value < coancestry[i])
         matches1 <- match(new[,1],names(parent.info$select.EBVs))
         matches2 <- match(new[,2],names(parent.info$select.EBVs))
         a <- parent.info$select.EBVs[matches1]
@@ -186,7 +193,7 @@ create_cross_design <- function(parent.info, prog.percross, generation,
         parent1 <- names(sorted.ebvs)[c(seq(from = 1,to = n.s.ebvs,by = 2))]
         parent2 <- names(sorted.ebvs)[c(seq(2,n.s.ebvs,2))]
         cross.design <- cbind(par1=parent1,par2=parent2,prog=rep(prog.percross,length(parent1)))}}
-
+  
   if(mating.design == "MP") {
     if(coancest.thresh){
       par1 <- vector()
@@ -206,7 +213,7 @@ create_cross_design <- function(parent.info, prog.percross, generation,
         relationship.matrix <- relationship.matrix[,names(sorted.minimum)]
         E <- upper.tri(relationship.matrix)
         relationship.matrix[E] <- NA
-        new <- subset(reshape2::melt(as.matrix(t(relationship.matrix))), value < coancest)
+        new <- subset(melt(as.matrix(t(relationship.matrix))), value < coancest)
         matches1 <- match(new[,1],names(parent.info$select.EBVs))
         matches2 <- match(new[,2],names(parent.info$select.EBVs))
         a <- parent.info$select.EBVs[matches1]
@@ -230,19 +237,19 @@ create_cross_design <- function(parent.info, prog.percross, generation,
           parent3 <- rep(names(sorted.ebvs[2]),(n.s.ebvs/2)+1)
           parent4 <- names(sorted.ebvs[3:((n.s.ebvs/2)+3)])
           cross.design <- cbind(par1=c(parent1,parent3),par2=c(parent2,parent4),prog=rep(prog.percross,length(c(parent1,parent3))))
-
+          
         }}
-
+  
   if(mating.design == "cross.file.input") {
     colClasses = c("integer", "integer", "integer")
     cross.design = as.matrix(read.table(cross.file,header=F,stringsAsFactors = F))}
-
+  
   num.crosses <- nrow(cross.design)
   total.progeny <- sum(as.numeric(cross.design[,3]))
   par1.list<-vector(); par2.list<-vector()
   par1.id<-vector(); par2.id<-vector()
   the.generation<- rep(generation,total.progeny)
-
+  
   if (generation==1){
     total.indiv   <- total.progeny+length(unique(c(cross.design[,1],cross.design[,2])))
     cumul.total <- length(unique(c(cross.design[,1],cross.design[,2]))) + total.progeny
@@ -253,13 +260,13 @@ create_cross_design <- function(parent.info, prog.percross, generation,
       par2<-as.character(cross.design[m,2])
       par1.list<-c(par1.list,rep(par1,cross.prog))
       par2.list<-c(par2.list,rep(par2,cross.prog))}
-
+    
     uni <- length(unique(c(cross.design[,1],cross.design[,2])))
     parent.pedigree <- cbind("ID"=rep(unique(c(cross.design[,1],cross.design[,2])),1),"Par1" = rep(0,uni), "Par2"= rep(0,uni),"gener"=rep(0,uni))
     progeny.pedigree<-cbind("ID"=indiv.IDs[1:length(indiv.IDs)], "Par1"=par1.list[1:length(par1.list)],"Par2"=par2.list[1:length(par1.list)],"gener"=the.generation[1:length(the.generation)])
     full.pedigree <- rbind(parent.pedigree,progeny.pedigree)
     selection.pedigree <- full.pedigree
-
+    
   } else {
     indiv.IDs<- c("indiv.IDs",seq(max(as.numeric(parent.info$fullped[,1]))+1,max(as.numeric(parent.info$fullped[,1]))+total.progeny))
     cumul.total<- parent.info$cumulative.total + total.progeny
@@ -276,11 +283,11 @@ create_cross_design <- function(parent.info, prog.percross, generation,
     full.pedigree <- rbind(parent.info$fullped,progeny.pedigree)
     selection.pedigree <- rbind(parent.info$ped,progeny.pedigree)
   }
-
+  
   #if(save) {
   #  pedfilename=paste(rep.num,mapinfo$date.time,prefix,"-pedigree.txt",sep="")
   #  write.table(progeny.pedigree,pedfilename, quote = F, row.names = F, col.names = T, sep=" ")}
-
+  
   ###Imp that genos.3d is first in list item, and total progeny is next list item bc in createtgv routine it expects genos.3d as first element and total prog as second
   cross.design <-list(cross.design=cross.design, total.progeny.number=total.progeny, progeny.pedigree=progeny.pedigree, full.pedigree= full.pedigree,
                       num.parents=parent.info$num.parents, coancestry.threshold=coancest, selection.ped=selection.pedigree,
