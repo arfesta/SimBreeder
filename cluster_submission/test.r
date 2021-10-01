@@ -22,7 +22,7 @@ Minor.value =-100
 Dominance.Coeff=0
 indiv.tree.h2 = .3
 
-  load.pop <- paste0("~/SimBreeder/base_population/base_population_op_test_",args[1],".RData")
+  load.pop <- paste0("/share/rosswhet/arfesta/SimBreeder/base_population/base_population_op_test_",args[1],".RData")
 load(load.pop)
 
 ###Create matrices to hold outputs####
@@ -76,4 +76,4 @@ newList <- list("g"=genetic.gain.mine,"gv"=genotypic.variance, "pg"=phenotypic.g
 
 the.name <- paste("GBLUP.nodom.64.OP.pop_",args[1], sep="")
 assign(x=the.name,value=newList)
-save(list=the.name,file=paste("~/",the.name,".RData",sep=""))
+save(list=the.name,file=paste("/share/rosswhet/arfesta/",the.name,".RData",sep=""))
