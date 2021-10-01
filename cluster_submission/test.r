@@ -2,11 +2,11 @@
 args = commandArgs(trailingOnly=TRUE)
 
 # Run this on Domino ####
-source('~/SimBreeder/R/sim_phenos.R')
-source('~/SimBreeder/R/create_cross_design.R')
-source('~/SimBreeder/R/make_crosses.R')
-source('~/SimBreeder/R/calc_TGV.R')
-source('~/SimBreeder/R/extract_selections.new3.R')
+source('/share/rosswhet/arfesta/SimBreeder/R/sim_phenos.R')
+source('/share/rosswhet/arfesta/SimBreeder/R/create_cross_design.R')
+source('/share/rosswhet/arfesta/SimBreeder/R/make_crosses.R')
+source('/share/rosswhet/arfesta/SimBreeder/R/calc_TGV.R')
+source('/share/rosswhet/arfesta/SimBreeder/R/extract_selections.new3.R')
 
 ## Run Values ####
 NumParents=64
