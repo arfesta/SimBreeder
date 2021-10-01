@@ -10,6 +10,6 @@
 module load conda
 conda activate /usr/local/usrapps/rosswhet/biostar_env
 
-Rscript ~/SimBreeder/R/test.R $LSB_JOBINDEX
+Rscript --vanilla ~/SimBreeder/R/test.R $LSB_JOBINDEX
 
 conda deactivate
