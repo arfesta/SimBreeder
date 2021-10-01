@@ -9,6 +9,6 @@
 module load conda
 conda activate /usr/local/usrapps/rosswhet/biostar_env
 
-Rscript --vanilla ~/SimBreeder/cluster_submission/test.r $LSB_JOBINDEX
+Rscript --vanilla /share/rosswhet/arfesta/SimBreeder/cluster_submission/test.r $LSB_JOBINDEX
 
 conda deactivate
