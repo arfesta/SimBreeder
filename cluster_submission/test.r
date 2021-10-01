@@ -1,5 +1,5 @@
 #!/usr/bin/env Rscript
-args = commandARrgs(trailingOnly=TRUE)
+args = commandArgs(trailingOnly=TRUE)
 
 # Run this on Domino ####
 source('~/SimBreeder/R/sim_phenos.R')
