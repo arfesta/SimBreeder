@@ -10,7 +10,7 @@ source('/share/rosswhet/arfesta/SimBreeder/R/extract_selections.new3.R')
 
 ## Run Values ####
 NumParents=64
-prog.per.cross = 30
+prog.per.cross = 60
 af.selection = "GBLUP"
 rel.mat.cross = "markers"
 num.sel.af = 64
@@ -21,6 +21,9 @@ Major.value =1
 Minor.value =-100
 Dominance.Coeff=0
 indiv.tree.h2 = .3
+
+load("/share/rosswhet/arfesta/SimBreeder/cluster_submission/all_seeds.RData")
+the_seeds <- all_seeds[args[1]]
 
   load.pop <- paste0("/share/rosswhet/arfesta/SimBreeder/base_population/base_population_op_test_",args[1],".RData")
 load(load.pop)
@@ -52,7 +55,7 @@ op.test$marker.matrix <- op.test$marker.matrix[1:NumParents,]
 cross.design <- create_cross_design(parent.info = op.test,prog.percross = prog.per.cross,generation  = 1,use.op.par.phenos = T)
 progeny1 <- make_crosses(map.info=base_pop_data$genetic.map, cross.design = cross.design, parent.info = base_pop_data$parents,num.cores = num.of.cores)
 progeny1.TGV <- calc_TGV(map.info = base_pop_data$genetic.map,geno.info = progeny1,cross.design = cross.design,A = Major.value,a = Minor.value,dom.coeff = Dominance.Coeff)
-set.seed(NULL); progeny1.phenos <- sim_phenos(TGV.object = progeny1.TGV,h2 = indiv.tree.h2)
+set.seed(the_seeds[1]); progeny1.phenos <- sim_phenos(TGV.object = progeny1.TGV,h2 = indiv.tree.h2)
 progeny1.extractions <- extract_selections(relationship.matrix.type = rel.mat.cross, map.info = base_pop_data$genetic.map,cross.design = cross.design,past.tgv = base_pop_data$parents.TGV,
                                            past.phenos = base_pop_data$parents.phenos,parent.info = op.test,progeny.info = progeny1,
                                            progeny.TGV = progeny1.TGV,progeny.phenos = progeny1.phenos,among.family.selection = af.selection,
@@ -74,7 +77,7 @@ rm(progeny1); gc(verbose = F,full = T)
 cross.design <- create_cross_design(parent.info = progeny1.extractions,prog.percross = prog.per.cross,generation  = 2)
 progeny2 <- make_crosses(map.info=base_pop_data$genetic.map, cross.design = cross.design, parent.info = progeny1.extractions,num.cores = num.of.cores)
 progeny2.TGV <- calc_TGV(map.info = base_pop_data$genetic.map,geno.info = progeny2,cross.design = cross.design,A = Major.value,a = Minor.value,dom.coeff = Dominance.Coeff)
-set.seed(NULL); progeny2.phenos <- sim_phenos(TGV.object = progeny2.TGV,h2 = indiv.tree.h2)
+set.seed(the_seeds[2]); progeny2.phenos <- sim_phenos(TGV.object = progeny2.TGV,h2 = indiv.tree.h2)
 progeny2.extractions <- extract_selections(relationship.matrix.type = rel.mat.cross, map.info = base_pop_data$genetic.map,cross.design = cross.design,past.tgv = progeny1.TGV,
                                            past.phenos = progeny1.phenos,parent.info = progeny1.extractions,progeny.info = progeny2,
                                            progeny.TGV = progeny2.TGV,progeny.phenos = progeny2.phenos,among.family.selection = af.selection,
@@ -99,7 +102,7 @@ rm(progeny1.TGV,progeny1.extractions, progeny1.phenos,progeny2);gc(verbose = F,f
 cross.design <- create_cross_design(parent.info = progeny2.extractions,prog.percross = prog.per.cross,generation  = 3)
 progeny3 <- make_crosses(map.info=base_pop_data$genetic.map, cross.design = cross.design, parent.info = progeny2.extractions,num.cores = num.of.cores)
 progeny3.TGV <- calc_TGV(map.info = base_pop_data$genetic.map,geno.info = progeny3,cross.design = cross.design,A = Major.value,a = Minor.value,dom.coeff = Dominance.Coeff)
-set.seed(NULL); progeny3.phenos <- sim_phenos(TGV.object = progeny3.TGV,h2 = indiv.tree.h2)
+set.seed(the_seeds[3]); progeny3.phenos <- sim_phenos(TGV.object = progeny3.TGV,h2 = indiv.tree.h2)
 progeny3.extractions <- extract_selections(relationship.matrix.type = rel.mat.cross, map.info = base_pop_data$genetic.map,cross.design = cross.design,past.tgv = progeny2.TGV,
                                            past.phenos = progeny2.phenos,parent.info = progeny2.extractions,progeny.info = progeny3,
                                            progeny.TGV = progeny3.TGV,progeny.phenos = progeny3.phenos,among.family.selection = af.selection,
@@ -123,7 +126,7 @@ rm(progeny2.TGV,progeny2.extractions, progeny2.phenos,progeny3);gc(verbose = F,f
 cross.design <- create_cross_design(parent.info = progeny3.extractions,prog.percross = prog.per.cross,generation  = 4)
 progeny4 <- make_crosses(map.info=base_pop_data$genetic.map, cross.design = cross.design, parent.info = progeny3.extractions,num.cores = num.of.cores)
 progeny4.TGV <- calc_TGV(map.info = base_pop_data$genetic.map,geno.info = progeny4,cross.design = cross.design,A = Major.value,a = Minor.value,dom.coeff = Dominance.Coeff)
-set.seed(NULL); progeny4.phenos <- sim_phenos(TGV.object = progeny4.TGV,h2 = indiv.tree.h2)
+set.seed(the_seeds[4]); progeny4.phenos <- sim_phenos(TGV.object = progeny4.TGV,h2 = indiv.tree.h2)
 progeny4.extractions <- extract_selections(relationship.matrix.type = rel.mat.cross, map.info = base_pop_data$genetic.map,cross.design = cross.design,past.tgv = progeny3.TGV,
                                            past.phenos = progeny3.phenos,parent.info = progeny3.extractions,progeny.info = progeny4,
                                            progeny.TGV = progeny4.TGV,progeny.phenos = progeny4.phenos,among.family.selection = af.selection,
@@ -147,7 +150,7 @@ rm(progeny3.TGV,progeny3.extractions, progeny3.phenos,progeny4);gc(verbose = F,f
 cross.design <- create_cross_design(parent.info = progeny4.extractions,prog.percross = prog.per.cross,generation  = 5)
 progeny5 <- make_crosses(map.info=base_pop_data$genetic.map, cross.design = cross.design, parent.info = progeny4.extractions,num.cores = num.of.cores)
 progeny5.TGV <- calc_TGV(map.info = base_pop_data$genetic.map,geno.info = progeny5,cross.design = cross.design,A = Major.value,a = Minor.value,dom.coeff = Dominance.Coeff)
-set.seed(NULL); progeny5.phenos <- sim_phenos(TGV.object = progeny5.TGV,h2 = indiv.tree.h2)
+set.seed(the_seeds[5]); progeny5.phenos <- sim_phenos(TGV.object = progeny5.TGV,h2 = indiv.tree.h2)
 progeny5.extractions <- extract_selections(relationship.matrix.type = rel.mat.cross, map.info = base_pop_data$genetic.map,cross.design = cross.design,past.tgv = progeny4.TGV,
                                            past.phenos = progeny4.phenos,parent.info = progeny4.extractions,progeny.info = progeny5,
                                            progeny.TGV = progeny5.TGV,progeny.phenos = progeny5.phenos,among.family.selection = af.selection,
@@ -170,7 +173,7 @@ rm(progeny4.TGV,progeny4.extractions, progeny4.phenos,progeny5);gc(verbose = F,f
 cross.design <- create_cross_design(parent.info = progeny5.extractions,prog.percross = prog.per.cross,generation  = 6)
 progeny6 <- make_crosses(map.info=base_pop_data$genetic.map, cross.design = cross.design, parent.info = progeny5.extractions,num.cores = num.of.cores)
 progeny6.TGV <- calc_TGV(map.info = base_pop_data$genetic.map,geno.info = progeny6,cross.design = cross.design,A = Major.value,a = Minor.value,dom.coeff = Dominance.Coeff)
-set.seed(NULL); progeny6.phenos <- sim_phenos(TGV.object = progeny6.TGV,h2 = indiv.tree.h2)
+set.seed(the_seeds[6]); progeny6.phenos <- sim_phenos(TGV.object = progeny6.TGV,h2 = indiv.tree.h2)
 progeny6.extractions <- extract_selections(relationship.matrix.type = rel.mat.cross, map.info = base_pop_data$genetic.map,cross.design = cross.design,past.tgv = progeny5.TGV,
                                            past.phenos = progeny5.phenos,parent.info = progeny5.extractions,progeny.info = progeny6,
                                            progeny.TGV = progeny6.TGV,progeny.phenos = progeny6.phenos,among.family.selection = af.selection,
@@ -193,7 +196,7 @@ rm(progeny5.TGV,progeny5.extractions, progeny5.phenos,progeny6);gc(verbose = F,f
 cross.design <- create_cross_design(parent.info = progeny6.extractions,prog.percross = prog.per.cross,generation  = 7)
 progeny7 <- make_crosses(map.info=base_pop_data$genetic.map, cross.design = cross.design, parent.info = progeny6.extractions,num.cores = num.of.cores)
 progeny7.TGV <- calc_TGV(map.info = base_pop_data$genetic.map,geno.info = progeny7,cross.design = cross.design,A = Major.value,a = Minor.value,dom.coeff = Dominance.Coeff)
-set.seed(NULL); progeny7.phenos <- sim_phenos(TGV.object = progeny7.TGV,h2 = indiv.tree.h2)
+set.seed(the_seeds[7]); progeny7.phenos <- sim_phenos(TGV.object = progeny7.TGV,h2 = indiv.tree.h2)
 progeny7.extractions <- extract_selections(relationship.matrix.type = rel.mat.cross, map.info = base_pop_data$genetic.map,cross.design = cross.design,past.tgv = progeny6.TGV,
                                            past.phenos = progeny6.phenos,parent.info = progeny6.extractions,progeny.info = progeny7,
                                            progeny.TGV = progeny7.TGV,progeny.phenos = progeny7.phenos,among.family.selection = af.selection,
@@ -216,7 +219,7 @@ rm(progeny6.TGV,progeny6.extractions, progeny6.phenos,progeny7);gc(verbose = F,f
 cross.design <- create_cross_design(parent.info = progeny7.extractions,prog.percross = prog.per.cross,generation  = 8)
 progeny8 <- make_crosses(map.info=base_pop_data$genetic.map, cross.design = cross.design, parent.info = progeny7.extractions,num.cores = num.of.cores)
 progeny8.TGV <- calc_TGV(map.info = base_pop_data$genetic.map,geno.info = progeny8,cross.design = cross.design,A = Major.value,a = Minor.value,dom.coeff = Dominance.Coeff)
-set.seed(NULL); progeny8.phenos <- sim_phenos(TGV.object = progeny8.TGV,h2 = indiv.tree.h2)
+set.seed(the_seeds[8]); progeny8.phenos <- sim_phenos(TGV.object = progeny8.TGV,h2 = indiv.tree.h2)
 progeny8.extractions <- extract_selections(relationship.matrix.type = rel.mat.cross, map.info = base_pop_data$genetic.map,cross.design = cross.design,past.tgv = progeny7.TGV,
                                            past.phenos = progeny7.phenos,parent.info = progeny7.extractions,progeny.info = progeny8,
                                            progeny.TGV = progeny8.TGV,progeny.phenos = progeny8.phenos,among.family.selection = af.selection,
@@ -239,7 +242,7 @@ rm(progeny7.TGV,progeny7.extractions, progeny7.phenos,progeny8);gc(verbose = F,f
 cross.design <- create_cross_design(parent.info = progeny8.extractions,prog.percross = prog.per.cross,generation  = 9)
 progeny9 <- make_crosses(map.info=base_pop_data$genetic.map, cross.design = cross.design, parent.info = progeny8.extractions,num.cores = num.of.cores)
 progeny9.TGV <- calc_TGV(map.info = base_pop_data$genetic.map,geno.info = progeny9,cross.design = cross.design,A = Major.value,a = Minor.value,dom.coeff = Dominance.Coeff)
-set.seed(NULL); progeny9.phenos <- sim_phenos(TGV.object = progeny9.TGV,h2 = indiv.tree.h2)
+set.seed(the_seeds[9]); progeny9.phenos <- sim_phenos(TGV.object = progeny9.TGV,h2 = indiv.tree.h2)
 progeny9.extractions <- extract_selections(relationship.matrix.type = rel.mat.cross, map.info = base_pop_data$genetic.map,cross.design = cross.design,past.tgv = progeny8.TGV,
                                            past.phenos = progeny8.phenos,parent.info = progeny8.extractions,progeny.info = progeny9,
                                            progeny.TGV = progeny9.TGV,progeny.phenos = progeny9.phenos,among.family.selection = af.selection,
@@ -262,7 +265,7 @@ rm(progeny8.TGV,progeny8.extractions, progeny8.phenos,progeny9);gc(verbose = F,f
 cross.design <- create_cross_design(parent.info = progeny9.extractions,prog.percross = prog.per.cross,generation  = 10)
 progeny10 <- make_crosses(map.info=base_pop_data$genetic.map, cross.design = cross.design, parent.info = progeny9.extractions,num.cores = num.of.cores)
 progeny10.TGV <- calc_TGV(map.info = base_pop_data$genetic.map,geno.info = progeny10,cross.design = cross.design,A = Major.value,a = Minor.value,dom.coeff = Dominance.Coeff)
-set.seed(NULL); progeny10.phenos <- sim_phenos(TGV.object = progeny10.TGV,h2 = indiv.tree.h2)
+set.seed(the_seeds[10]); progeny10.phenos <- sim_phenos(TGV.object = progeny10.TGV,h2 = indiv.tree.h2)
 progeny10.extractions <- extract_selections(relationship.matrix.type = rel.mat.cross, map.info = base_pop_data$genetic.map,cross.design = cross.design,past.tgv = progeny9.TGV,
                                            past.phenos = progeny9.phenos,parent.info = progeny9.extractions,progeny.info = progeny10,
                                            progeny.TGV = progeny10.TGV,progeny.phenos = progeny10.phenos,among.family.selection = af.selection,
