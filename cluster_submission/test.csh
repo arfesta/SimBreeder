@@ -1,7 +1,7 @@
 #!/bin/tcsh
 #BSUB -J simulator[1-300]
 #BSUB -n 1
-#BSUB -W 01:00
+#BSUB -W 12:00
 #BSUB -o Output_%J_%I.out
 #BSUB -e Error_%J_%I.err
 #BSUB -R "rusage[mem=16GB]"
