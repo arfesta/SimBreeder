@@ -23,7 +23,8 @@ Dominance.Coeff=0
 indiv.tree.h2 = .3
 
 load("/share/rosswhet/arfesta/SimBreeder/cluster_submission/all_seeds.RData")
-this.gen <- all_seeds[[args[1]]]
+idx <- as.numeric(args[1])
+this.gen <- all_seeds[[idx]]
 
 load.pop <- paste0("/share/rosswhet/arfesta/SimBreeder/base_population/base_population_op_test_",args[1],".RData")
 load(load.pop)
