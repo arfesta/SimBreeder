@@ -1,5 +1,5 @@
 #!/bin/tcsh
-#BSUB -J simulator[1-300]
+#BSUB -J simulator[1-64]
 #BSUB -n 1
 #BSUB -W 12:00
 #BSUB -o Output_%J_%I.out
