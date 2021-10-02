@@ -135,7 +135,7 @@ progeny4.extractions <- extract_selections(map.info = base_pop_data$genetic.map,
                                            past.phenos = progeny3.phenos,parent.info = progeny3.extractions,progeny.info = progeny4,
                                            progeny.TGV = progeny4.TGV,progeny.phenos = progeny4.phenos,among.family.selection = af.selection,
                                            num.selections.among.family = num.sel.af,reduced = T,num.cores = num.of.cores)
-proc.time()-pt
+
 genetic.gain.mine[1,4] <- mean(progeny4.extractions$select.genval) - mean(op.test$genetic.values)
 genotypic.variance[1,4]<- var(progeny4.extractions$select.genval)
 phenotypic.gain.mine[1,4] <-mean(progeny4.extractions$selection.phenos) - mean(op.test$phenos)
