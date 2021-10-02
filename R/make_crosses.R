@@ -11,7 +11,7 @@
 #' progeny1 <- make_crosses(parent.info = op.families,map.info = the.map,cross.design = cross.file,run.parallel = T,num.cores = 3)
 
 ####Create Make Crosses####
-make_crosses <- function(parent.info,map.info,cross.design, num.cores = 2){
+make_crosses <- function(parent.info,map.info,cross.design, num.cores = num.of.cores){
   library(parallel); library(abind)
   cross.design <- cross.design$cross.design
   num.crosses <- as.numeric(nrow(cross.design))

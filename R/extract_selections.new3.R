@@ -2,7 +2,7 @@ extract_selections <- function(map.info, cross.design, past.tgv,
                                past.phenos, parent.info, progeny.info, progeny.TGV, progeny.phenos, 
                                selection.strategy, among.family.selection, within.family.selection = NULL, 
                                num.selections.within.family = 1, num.selections.among.family = NULL, 
-                               relationship.matrix.type = "pedigree", prefix = NULL, rep.num = NULL, 
+                               relationship.matrix.type = rel.mat.cross, prefix = NULL, rep.num = NULL, 
                                reduced = F, weighted = F,num.cores = NULL) {
   
   library(MatrixModels)
