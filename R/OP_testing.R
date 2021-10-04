@@ -61,23 +61,28 @@ OP_testing <- function(map.info,parent.info,parent.phenos,parents.TGV,cross.prog
       
       par1.alleles <- (parent.info$genos.3d[,par1,])
       par2.alleles <- (parent.info$genos.3d[,par2,])
+      
       chr.ind.r <- vector("list")
-      for(each in 1:cross.prog){ # For each progeny we are going to create do the following
+      for(each in 1:cross.prog){ # For each progeny we are going to do the following
         first.pos <- 1           # Specify the first position to be row 1 on the genetic map
         ch.r <- vector("list")   # Create empty vector list to hold recombination spots
         
         for(i in 1:length(chromo.last.loci.index)){ # Now for each chromosome do the following
           last.pos <- chromo.last.loci.index[i]     # Subset the last position of this chromosome
-          t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F)  # Sample a range of frequencies to test against rec. freqs
-          l <- which(t < map.info$recfreqs[first.pos:last.pos])  # Identify which of the sampled numbers were less than the rec. freq
+          l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
+          #t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F)  # Sample a range of frequencies to test against rec. freqs
+          #l <- which(t < map.info$recfreqs[first.pos:last.pos])  # Identify which of the sampled numbers were less than the rec. freq
           while(length(l) < 1){   # If none were less than rec. freq, sample again
-            t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F) 
-            l <- which(t < map.info$recfreqs[first.pos:last.pos])
+            #t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F) 
+            #l <- which(t < map.info$recfreqs[first.pos:last.pos])
+            l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
           }
-          ch.r[[i]] <- seq(first.pos,last.pos,1)[l] # Now subest those positions from the loci to find which loci will recombine
+          ch.r[[i]] <- seq(first.pos,last.pos,1)[l+1] # Now subest those positions from the loci to find which loci will recombine
           first.pos <- last.pos+ 1  # The first position will now be the last + 1
         }
+        
         chr.ind.r[[each]] <- unlist(ch.r)} # Store output of recombination spots
+      
 
       # Assign gametes 1
       for(i in 1:cross.prog) {
@@ -106,22 +111,26 @@ OP_testing <- function(map.info,parent.info,parent.phenos,parents.TGV,cross.prog
         
       # Identify recombination spots for parent 2
       chr.ind.r <- vector("list")
-      for(each in 1:cross.prog){ # For each progeny we are going to create do the following
+      for(each in 1:cross.prog){ # For each progeny we are going to do the following
         first.pos <- 1           # Specify the first position to be row 1 on the genetic map
         ch.r <- vector("list")   # Create empty vector list to hold recombination spots
         
         for(i in 1:length(chromo.last.loci.index)){ # Now for each chromosome do the following
           last.pos <- chromo.last.loci.index[i]     # Subset the last position of this chromosome
-          t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F)  # Sample a range of frequencies to test against rec. freqs
-          l <- which(t < map.info$recfreqs[first.pos:last.pos])  # Identify which of the sampled numbers were less than the rec. freq
+          l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
+          #t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F)  # Sample a range of frequencies to test against rec. freqs
+          #l <- which(t < map.info$recfreqs[first.pos:last.pos])  # Identify which of the sampled numbers were less than the rec. freq
           while(length(l) < 1){   # If none were less than rec. freq, sample again
-            t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F) 
-            l <- which(t < map.info$recfreqs[first.pos:last.pos])
+            #t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F) 
+            #l <- which(t < map.info$recfreqs[first.pos:last.pos])
+            l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
           }
-          ch.r[[i]] <- seq(first.pos,last.pos,1)[l] # Now subest those positions from the loci to find which loci will recombine
+          ch.r[[i]] <- seq(first.pos,last.pos,1)[l+1] # Now subest those positions from the loci to find which loci will recombine
           first.pos <- last.pos+ 1  # The first position will now be the last + 1
         }
+        
         chr.ind.r[[each]] <- unlist(ch.r)} # Store output of recombination spots
+      
       # Assign gametes 2
       for(i in 1:cross.prog) {
         allele <- sample(1:2,num.chromos,replace = T) # sample 12 alleles to start for each chromosome
@@ -157,20 +166,16 @@ OP_testing <- function(map.info,parent.info,parent.phenos,parents.TGV,cross.prog
       num.SNPQTL <- length(QTLSNPs) # the number of loci which are snpqtl
       QTLSNP.values <-matrix(NA,nrow=num.SNPQTL,ncol=1) # matrix to hold snpqtl values
       
-      QTLSNPaa <- which(QTLSNP.num[,1]=="a" & QTLSNP.num[,2]=="a")
-      QTLSNPcc <- which(QTLSNP.num[,1]=="c" & QTLSNP.num[,2]=="c")
-      QTLSNPac <- which(QTLSNP.num[,1]=="a" & QTLSNP.num[,2]=="c")
-      QTLSNPca <- which(QTLSNP.num[,1]=="c"  & QTLSNP.num[,2]=="a")
-      if (dom.coeff==0){
-        QTLSNP.values[QTLSNPaa,1] <- A*2
-        QTLSNP.values[QTLSNPcc,1] <- a*2
-        QTLSNP.values[QTLSNPac,1] <- (A+a+dom.coeff)
-        QTLSNP.values[QTLSNPca,1] <- (A+a+dom.coeff) } else {
-          QTLSNP.values[QTLSNPaa,1] <- A
-          QTLSNP.values[QTLSNPcc,1] <- a
-          QTLSNP.values[QTLSNPac,1] <- (A*dom.coeff)
-          QTLSNP.values[QTLSNPca,1] <- (A*dom.coeff)
-          }
+     # Dominance coefficient *h* of 1 means bad allele dominance, 0 mean good allele dominance
+    difference <- A-a
+    QTLSNPaa <- sapply(1:length.prog,function(x){
+      A*length(which(QTLSNP.num[,x,1]=="a" & QTLSNP.num[,x,2]=="a"))},simplify = T)
+    QTLSNPcc <- sapply(1:length.prog,function(x){
+      a*length(which(QTLSNP.num[,x,1]=="c" & QTLSNP.num[,x,2]=="c"))},simplify = T)
+    QTLSNPac <- sapply(1:length.prog,function(x){
+      (A-(difference*dom.coeff))  * length(which(QTLSNP.num[,x,1]=="a" & QTLSNP.num[,x,2]=="c"|QTLSNP.num[,x,1]=="c" & QTLSNP.num[,x,2]=="a"))},simplify = T)
+  
+  QTLSNP.values <- QTLSNPaa+QTLSNPcc+QTLSNPac
       
       par.QTL.allele1 <- as.numeric(array.out[rQTL.loci,,1])
       par.QTL.allele2 <- as.numeric(array.out[rQTL.loci,,2])

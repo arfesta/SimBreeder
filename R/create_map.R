@@ -33,8 +33,7 @@ create_genetic_map <- function(num.chromos, map.length, num.markers, total.qtl, 
 
   #Determine the number of intervals that will be calculated between loci and the number of loci per chromosome
  total.loci <- sum(num.markers,total.qtl)
-
-  num.intervals <- total.loci - 1 #Specifying the number of intervals that will need to be calcuated
+ 
   if(is.null(distribute.loci)) { loci.per.chromo <- round(rep(total.loci / num.chromos, num.chromos),digits = 0)
   } else if(distribute.loci == "list") {
     loci.per.chromo <- unlist(loci.per.chromo)
@@ -54,8 +53,8 @@ create_genetic_map <- function(num.chromos, map.length, num.markers, total.qtl, 
   # Set up genetic map data frame
   list1 <- lapply(1:num.chromos,function(x) rep(paste("chr",x,sep=""),loci.per.chromo[x])) # List "chr#" character set for all loci
   list2 <- lapply(1:num.chromos,function(x) 1:loci.per.chromo[x]) # List locus# for all chromosomes
-  intervals <- lapply(1:num.chromos,function(x) c(round(runif((loci.per.chromo[x]-1),min=round(0.2*all.chromo.sizes[x]/loci.per.chromo[x],1),
-                                                              max=round(1.8*all.chromo.sizes[x]/loci.per.chromo[x],1)),2)/100,5))
+  intervals <- lapply(1:num.chromos,function(x) c(round(runif((loci.per.chromo[x]),min=round(0.2*all.chromo.sizes[x]/loci.per.chromo[x],1),
+                                                              max=round(1.8*all.chromo.sizes[x]/loci.per.chromo[x],1)),2)/100))
   rec.freqs <- lapply(1:num.chromos,calc_rec_freq)
   #Recfreqs for each of the loci are determined by using the interval distance (for each locus) in Morgans and the haldane mapping function:
   #r=(1/2)*(1-e^(2*M))

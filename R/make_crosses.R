@@ -13,8 +13,8 @@
 ####Create Make Crosses####
 make_crosses <- function(parent.info,map.info,cross.design, num.cores = num.of.cores){
   library(parallel); library(abind)
-  cross.design <- cross.design$cross.design
-  num.crosses <- as.numeric(nrow(cross.design))
+  cross_design <- cross.design$cross.design
+  num.crosses <- as.numeric(nrow(cross_design))
   num.chromos <- length(unique(map.info$chr))
 last.locus.per.chrom <- vector()
 for(each in 1:num.chromos){
@@ -34,9 +34,9 @@ chromo.last.loci.index <-  unlist(lapply(1:num.chromos,function(x) {
       chromo.loci.index <- last.locus.per.chrom   # The last number of each loci for all chromsomes
       QTLSNPs      <- which(map.info$types %in% c("snpqtl"))      # A vector of the loci which are snpqtl
 
-      par1<-match(cross.design[x,1],unique(colnames(parent.info$genos.3d))) # assigns par1 to be the first parent in cross.design matrix
-      par2<-match(cross.design[x,2],unique(colnames(parent.info$genos.3d))) # assigns par2 to be the second parent in the cross.design matrix
-      cross.prog<-as.numeric(cross.design[x,3]) #assigns number of progeny to be the third column for cross "X"
+      par1<-match(cross_design[x,1],unique(colnames(parent.info$genos.3d))) # assigns par1 to be the first parent in cross.design matrix
+      par2<-match(cross_design[x,2],unique(colnames(parent.info$genos.3d))) # assigns par2 to be the second parent in the cross.design matrix
+      cross.prog<-as.numeric(cross_design[x,3]) #assigns number of progeny to be the third column for cross "X"
 
       # Create empty matrix to hold gametes
       # dimensions are (total # of loci) x  (# of cross progeny)
@@ -48,21 +48,24 @@ chromo.last.loci.index <-  unlist(lapply(1:num.chromos,function(x) {
         par2.alleles <- (parent.info$genos.3d[,par2,])
         }
       chr.ind.r <- vector("list")
-      for(each in 1:cross.prog){ # For each progeny we are going to create do the following
+      for(each in 1:cross.prog){ # For each progeny we are going to do the following
         first.pos <- 1           # Specify the first position to be row 1 on the genetic map
         ch.r <- vector("list")   # Create empty vector list to hold recombination spots
         
         for(i in 1:length(chromo.last.loci.index)){ # Now for each chromosome do the following
           last.pos <- chromo.last.loci.index[i]     # Subset the last position of this chromosome
-          t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F)  # Sample a range of frequencies to test against rec. freqs
-          l <- which(t < map.info$recfreqs[first.pos:last.pos])  # Identify which of the sampled numbers were less than the rec. freq
+          l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
+          #t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F)  # Sample a range of frequencies to test against rec. freqs
+          #l <- which(t < map.info$recfreqs[first.pos:last.pos])  # Identify which of the sampled numbers were less than the rec. freq
           while(length(l) < 1){   # If none were less than rec. freq, sample again
-            t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F) 
-            l <- which(t < map.info$recfreqs[first.pos:last.pos])
-          }
-          ch.r[[i]] <- seq(first.pos,last.pos,1)[l] # Now subest those positions from the loci to find which loci will recombine
+            #t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F) 
+            #l <- which(t < map.info$recfreqs[first.pos:last.pos])
+            l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
+            }
+          ch.r[[i]] <- seq(first.pos,last.pos,1)[l+1] # Now subest those positions from the loci to find which loci will recombine
           first.pos <- last.pos+ 1  # The first position will now be the last + 1
         }
+
         chr.ind.r[[each]] <- unlist(ch.r)} # Store output of recombination spots
 
       # Assign gametes 1
@@ -91,14 +94,14 @@ chromo.last.loci.index <-  unlist(lapply(1:num.chromos,function(x) {
 
       gametes1
     },mc.cores=num.cores)
-    gametes1 <- matrix(unlist(gametes1), ncol = num.crosses*mean(as.numeric(cross.design[,3])))
+    gametes1 <- matrix(unlist(gametes1), ncol = num.crosses*mean(as.numeric(cross_design[,3])))
     gametes2 <- mclapply(1:num.crosses,function(x){
       chromo.loci.index <- last.locus.per.chrom   # The last number of each loci for all chromsomes
       QTLSNPs      <- which(map.info$types %in% c("snpqtl"))      # A vector of the loci which are snpqtl
 
-      par1<-match(cross.design[x,1],unique(colnames(parent.info$genos.3d))) # assigns par1 to be the first parent in cross.design matrix
-      par2<-match(cross.design[x,2],unique(colnames(parent.info$genos.3d))) # assigns par2 to be the second parent in the cross.design matrix
-      cross.prog<-as.numeric(cross.design[x,3]) #assigns number of progeny to be the third column for cross "X"
+      par1<-match(cross_design[x,1],unique(colnames(parent.info$genos.3d))) # assigns par1 to be the first parent in cross_design matrix
+      par2<-match(cross_design[x,2],unique(colnames(parent.info$genos.3d))) # assigns par2 to be the second parent in the cross_design matrix
+      cross.prog<-as.numeric(cross_design[x,3]) #assigns number of progeny to be the third column for cross "X"
 
       # Create empty matrix to hold gametes
       # dimensions are (total # of loci) x  (# of cross progeny)
@@ -109,21 +112,24 @@ chromo.last.loci.index <-  unlist(lapply(1:num.chromos,function(x) {
       par2.alleles <- (parent.info$genos.3d[,par2,])}
 
       chr.ind.r <- vector("list")
-      for(each in 1:cross.prog){ # For each progeny we are going to create do the following
+      for(each in 1:cross.prog){ # For each progeny we are going to do the following
         first.pos <- 1           # Specify the first position to be row 1 on the genetic map
         ch.r <- vector("list")   # Create empty vector list to hold recombination spots
         
         for(i in 1:length(chromo.last.loci.index)){ # Now for each chromosome do the following
           last.pos <- chromo.last.loci.index[i]     # Subset the last position of this chromosome
-          t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F)  # Sample a range of frequencies to test against rec. freqs
-          l <- which(t < map.info$recfreqs[first.pos:last.pos])  # Identify which of the sampled numbers were less than the rec. freq
+          l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
+          #t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F)  # Sample a range of frequencies to test against rec. freqs
+          #l <- which(t < map.info$recfreqs[first.pos:last.pos])  # Identify which of the sampled numbers were less than the rec. freq
           while(length(l) < 1){   # If none were less than rec. freq, sample again
-            t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F) 
-            l <- which(t < map.info$recfreqs[first.pos:last.pos])
+            #t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F) 
+            #l <- which(t < map.info$recfreqs[first.pos:last.pos])
+            l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
           }
-          ch.r[[i]] <- seq(first.pos,last.pos,1)[l] # Now subest those positions from the loci to find which loci will recombine
+          ch.r[[i]] <- seq(first.pos,last.pos,1)[l+1] # Now subest those positions from the loci to find which loci will recombine
           first.pos <- last.pos+ 1  # The first position will now be the last + 1
         }
+        
         chr.ind.r[[each]] <- unlist(ch.r)} # Store output of recombination spots
       
       # Assign gametes 2
@@ -152,7 +158,7 @@ chromo.last.loci.index <-  unlist(lapply(1:num.chromos,function(x) {
 
       gametes2
     },mc.cores=num.cores)
-    gametes2 <- matrix(unlist(gametes2), ncol = num.crosses*mean(as.numeric(cross.design[,3])))
+    gametes2 <- matrix(unlist(gametes2), ncol = num.crosses*mean(as.numeric(cross_design[,3])))
     genos.3d <- abind(gametes1,gametes2,along = 3)
     out <- list(genos.3d=genos.3d)
   return(out)}

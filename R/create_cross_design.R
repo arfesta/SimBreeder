@@ -20,13 +20,15 @@
 
 ####Create Cross Design & Pedigree's####
 create_cross_design <- function(parent.info, prog.percross, generation,
-                                mating.design="AssortiveMating", coancest.thresh=T,
+                                mating.design=mt.design, coancest.thresh=T,
                                 use.par.marker.effects = F, use.op.par.phenos = F,
                                 cross.file= NULL, save=F, parent.phenos = NULL){
   library(reshape2)
+  
   coancest=NULL
+  
   if(length(dim(parent.info$genos.3d)) == 2){num.parents = 1; parent.names <- unique(parent.info$select.ped.ids)} else {
-    num.parents=ncol((parent.info$genos.3d[,,1]))
+    num.parents=ncol(parent.info$genos.3d[,,1])
     parent.names <- colnames(parent.info$genos.3d)}
   
   if(mating.design == "Self"){
@@ -66,8 +68,6 @@ create_cross_design <- function(parent.info, prog.percross, generation,
     if(coancest.thresh){
       E <- upper.tri(relationship.matrix); relationship.matrix[E] <- NA
       coancestry <- seq(.01,1,.005)
-      cross.design <- matrix(NA,nrow=1,ncol=2)
-      #all.cross.mats <-  parallel::mclapply(1:length(coancestry),function(i){
       for(i in 1:length(coancestry)){
         new <- subset(reshape2::melt(as.matrix(t(relationship.matrix))), value < coancestry[i])
         matches1 <- match(new[,1],names(sorted.ebvs))
@@ -81,12 +81,11 @@ create_cross_design <- function(parent.info, prog.percross, generation,
         for(each in 1:length(top.25)){
           par <- top.25[each]
           options1 <- which(new[,1] %in% par)
-          options2 <- which(new[,2] %in% par )
+          options2 <- which(new[,2] %in% par)
           options1.other <- options1[which(as.character(new[options1,2]) %in% all[[each]])]
           options2.other <- options2[which(new[options2,1] %in% all[[each]])]
           options <- sort(c(options1.other,options2.other))
           this.cross <- new[options[1:2],c(1:2)] ; colnames(this.cross) <- c("V1","V2")
-          #if(anyNA(this.cross)){break}
           cross.design <- rbind(cross.design,this.cross)
           if(each == 1){cross.design <- cross.design[-1,]}
           new <- new[-c(which(new[,1] %in% this.cross[,1] & new[,2] %in% this.cross[,2] )),]
@@ -101,7 +100,6 @@ create_cross_design <- function(parent.info, prog.percross, generation,
           options2.other <- options2[which(new[options2,1] %in% top50.samp)]
           options <- sort(c(options1.other,options2.other))
           this.cross <- new[options[1],c(1:2)] ; colnames(this.cross) <- c("V1","V2")
-          #if(anyNA(this.cross)){break}
           cross.design <- rbind(cross.design,this.cross)
           new <- new[-c(which(new[,1] %in% this.cross[,1] & new[,2] %in% this.cross[,2] )),]
           top50.samp <- top50.samp[-c(which(top50.samp %in% this.cross[,1] | top50.samp %in% this.cross[,2]))]
@@ -123,9 +121,6 @@ create_cross_design <- function(parent.info, prog.percross, generation,
         if(anyNA(c)){cross.design <- NA} else {cross.design <- c}
         if(anyNA(cross.design)){} else { break}
       }
-      #},mc.cores=30)
-      #this.cross <- which(unlist(lapply(all.cross.mats,anyNA)) == F)[1]
-      #cross.design <-  all.cross.mats[[this.cross]]
       cross.design[,3] <- rep(prog.percross,nrow(cross.design))
       coancest <- coancestry[i]
     } else {
@@ -259,7 +254,8 @@ create_cross_design <- function(parent.info, prog.percross, generation,
       par1<-as.character(cross.design[m,1])
       par2<-as.character(cross.design[m,2])
       par1.list<-c(par1.list,rep(par1,cross.prog))
-      par2.list<-c(par2.list,rep(par2,cross.prog))}
+      par2.list<-c(par2.list,rep(par2,cross.prog))
+      }
     
     uni <- length(unique(c(cross.design[,1],cross.design[,2])))
     parent.pedigree <- cbind("ID"=rep(unique(c(cross.design[,1],cross.design[,2])),1),"Par1" = rep(0,uni), "Par2"= rep(0,uni),"gener"=rep(0,uni))
