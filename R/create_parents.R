@@ -3,14 +3,15 @@
 #' This function creates the base population that can be used for testing further mating and selection strategies
 #' @param map.info The object returned from create_map function
 #' @param num.parents Number of parents that should be generated
-#' @param max.delt.allele The Maximum number of deleterious alleles any single parent can have
+#' @param max.delt.allele The maximum number of deleterious alleles any single parent can have
 #' @param par.markers.unqiue logical. Should each parent have a unique set of markers? Default: FALSE
 #' @param heterozygous.markers logical. Should the markers for all parents be heterozygous?  Default: FALSE
+#' @param inbred.parents logical. Should inbreds be generated? Default: FALSE
 #' @param QTL.sd A number providing the standard deviation of random QTL effects generated for the parents. Default: 0.25
 #' @keywords create parents
 #' @export
 #' @examples
-#' the.parents <- create_parents(map.info = the.map, num.parents = 96, max.delt.allele = 14)
+#' the_parents <- create_parents(map.info = genetic.map,num.parents = 2,max.delt.allele = 0,par.markers.unique = T,inbred.parents = T)
 
 
 ####Create Founder Parent Population####
