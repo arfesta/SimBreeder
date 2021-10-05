@@ -29,7 +29,7 @@ extract_selections <- function(map.info, cross.design, past.tgv,
         parent.markers <- parent.info$genos.3d[marker.loci, (names(parent.info$mean.parent.phenos)), ]
       }  else {
         parent.markers <- past.tgv$markers.matrix
-        }
+      }
     } else { parent.markers <- parent.info$all.markers }
     prog.markers <- progeny.TGV$markers.matrix
     prog.phenos <- progeny.phenos$phenos
@@ -149,7 +149,7 @@ extract_selections <- function(map.info, cross.design, past.tgv,
     diag(g.mat) <- 1
     cc <-  Rfast::transpose(g.mat)[upper.tri( Rfast::transpose(g.mat), diag = F)]
     g.mat <- Rfast::upper_tri.assign(x= g.mat,v = cc, diag = F); rm(cc)
-
+    
     A <- as_tibble(as.matrix(getA(ped)))
     A = A[match(names(prog.phenos), colnames(A)), match(names(prog.phenos),  colnames(A))]
     the.data <- as.matrix(g.mat)*.99 + as.matrix(A) * 0.01
@@ -176,7 +176,7 @@ extract_selections <- function(map.info, cross.design, past.tgv,
       first <- last + 1
       last <- first + prog.percross - 1
     }
-  
+    
     first <- 1
     last <- prog.percross
     mean.progeny.phenos <- vector()
@@ -244,9 +244,9 @@ extract_selections <- function(map.info, cross.design, past.tgv,
     selection.EBVs <- progeny.blups[names(the.selections)]
     
     if (generation == 1) {
-        all.phenos <- c(parent.info$phenos, selection.phenos)
-        all.genetic.vals <- c(parent.info$genetic.values, 
-                              new.pars.genval)
+      all.phenos <- c(parent.info$phenos, selection.phenos)
+      all.genetic.vals <- c(parent.info$genetic.values, 
+                            new.pars.genval)
     } else {
       all.phenos <- c(parent.info$all.phenos, selection.phenos)
       all.genetic.vals <- c(parent.info$all.genetic.vals, new.pars.genval)
@@ -255,17 +255,17 @@ extract_selections <- function(map.info, cross.design, past.tgv,
     new.parent.genos <- progeny.info$genos.3d[, names(the.selections),]
     numselections <- dim(new.parent.genos)[2]
     select.ped.ids <- as.numeric(names(new.pars.genval))
-
+    
     if(length(dim(new.parent.genos)) < 3){
-        all.markers1 <- cbind(parent.info$genos.3d[marker.loci,,1], new.parent.genos[marker.loci, 1])
-        colnames(all.markers1) <- c(colnames(parent.info$genos.3d[marker.loci,,1]),select.ped.ids)
-        all.markers2 <- cbind(parent.info$genos.3d[marker.loci,,2], new.parent.genos[marker.loci, 2])
-        colnames(all.markers2) <- c(colnames(parent.info$genos.3d[marker.loci,,2]),select.ped.ids)
-        all.markers <- abind(all.markers1, all.markers2, along = 3)
-      } else {
-        all.markers1 <- cbind(parent.info$genos.3d[marker.loci,,1], new.parent.genos[marker.loci, ,1])
-        all.markers2 <- cbind(parent.info$genos.3d[marker.loci,, 2], new.parent.genos[marker.loci, ,2])
-      }
+      all.markers1 <- cbind(parent.info$genos.3d[marker.loci,,1], new.parent.genos[marker.loci, 1])
+      colnames(all.markers1) <- c(colnames(parent.info$genos.3d[marker.loci,,1]),select.ped.ids)
+      all.markers2 <- cbind(parent.info$genos.3d[marker.loci,,2], new.parent.genos[marker.loci, 2])
+      colnames(all.markers2) <- c(colnames(parent.info$genos.3d[marker.loci,,2]),select.ped.ids)
+      all.markers <- abind(all.markers1, all.markers2, along = 3)
+    } else {
+      all.markers1 <- cbind(parent.info$genos.3d[marker.loci,,1], new.parent.genos[marker.loci, ,1])
+      all.markers2 <- cbind(parent.info$genos.3d[marker.loci,, 2], new.parent.genos[marker.loci, ,2])
+    }
     all.markers <- abind(all.markers1, all.markers2, along = 3)
     f.ped <- pedigree(label = full.ped[, 1], sire = full.ped[,2], dam = full.ped[, 3])
     pedigree.inbreeding <- inbreeding(f.ped)
@@ -290,15 +290,15 @@ extract_selections <- function(map.info, cross.design, past.tgv,
   
   if (relationship.matrix.type == "pedigree") {
     if (generation == 1) {
-     ff <- getA(f.ped)
-     A <- data.frame(as.matrix(ff),stringsAsFactors = F)
-     colnames(A) <- rownames(A)
+      ff <- getA(f.ped)
+      A <- data.frame(as.matrix(ff),stringsAsFactors = F)
+      colnames(A) <- rownames(A)
     }  else {
       selection.ped <- cross.design$selection.ped
-     f.ped2 <- pedigree(label=selection.ped[,1],sire=selection.ped[,2],dam=selection.ped[,3])
-     A <- getA(f.ped2)
-     A <- data.frame(as.matrix(A),stringsAsFactors = F)
-     colnames(A) <- rownames(A)
+      f.ped2 <- pedigree(label=selection.ped[,1],sire=selection.ped[,2],dam=selection.ped[,3])
+      A <- getA(f.ped2)
+      A <- data.frame(as.matrix(A),stringsAsFactors = F)
+      colnames(A) <- rownames(A)
     }
     l <- match(names(selection.phenos), rownames(A))
     rel.mat <- A[l, l]
