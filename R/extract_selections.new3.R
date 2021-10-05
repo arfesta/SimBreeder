@@ -25,7 +25,11 @@ extract_selections <- function(map.info, cross.design, past.tgv,
     full.ped <- cross.design$full.pedigree
     selection.ped <- cross.design$selection.ped
     if (generation == 1) {
-      if (reduced) { parent.markers <- parent.info$genos.3d[marker.loci, (names(parent.info$mean.parent.phenos)), ]}  else {parent.markers <- past.tgv$markers.matrix}
+      if (reduced) { 
+        parent.markers <- parent.info$genos.3d[marker.loci, (names(parent.info$mean.parent.phenos)), ]
+      }  else {
+        parent.markers <- past.tgv$markers.matrix
+        }
     } else { parent.markers <- parent.info$all.markers }
     prog.markers <- progeny.TGV$markers.matrix
     prog.phenos <- progeny.phenos$phenos
@@ -36,7 +40,7 @@ extract_selections <- function(map.info, cross.design, past.tgv,
     if (generation == 1) {
       ped <- pedigree(label = full.ped[, 1], sire = full.ped[,2], dam = full.ped[, 3])
       if (reduced) {
-        all.phenos <- c(parent.info$phenos, progeny.phenos)
+        all.phenos <- c(parent.info$phenos, prog.phenos)
         all.genetic.vals <- c(parent.info$genetic.values, 
                               prog.genetic.values)
       }
@@ -107,20 +111,25 @@ extract_selections <- function(map.info, cross.design, past.tgv,
   if (among.family.selection == "GBLUP") {
     prog.markers <- progeny.info$genos.3d[marker.loci, , ]
     gc(full=T,verbose = F,reset = T)
-    pt <- proc.time()
+    
     all.m <- rep(0,ncol(prog.markers)*ncol(prog.markers))
     for(all.markers in 1:nrow(prog.markers)){
       unique.markers <-  unique(c(prog.markers[all.markers,,1],prog.markers[all.markers,,2]))
       
       for(each.marker in 1:length(unique.markers)){
-        these.in.both <- which(prog.markers[all.markers,,1] %in% unique.markers[each.marker] & prog.markers[all.markers,,2] %in% unique.markers[each.marker])
+        these.in.both <- which(prog.markers[all.markers,,1] %in% unique.markers[each.marker] 
+                               & prog.markers[all.markers,,2] %in% unique.markers[each.marker])
         if(length(these.in.both) > 1){
           test_in_both <- comb_n(n = these.in.both,k = 2)
-          these.in.one <-  which(prog.markers[all.markers,,1] %in% unique.markers[each.marker] | prog.markers[all.markers,,2] %in% unique.markers[each.marker] )
-          test_in_one <- comb_n(n = these.in.one,k = 2)
-          test_in_one <- test_in_one[,-c(which(test_in_one[1,] %in% these.in.both))]
           idx <- ((test_in_both[1,]-1)*ncol(prog.markers)) + test_in_both[2,]
           all.m[idx] <- all.m[idx] +2
+          these.in.one <-  which(prog.markers[all.markers,,1] %in% unique.markers[each.marker]  | prog.markers[all.markers,,2] %in% unique.markers[each.marker] )
+          test_in_one <- comb_n(n = these.in.one,k = 2)
+          
+          rm1 <- which(test_in_one[1,] %in% test_in_both[1,] & test_in_one[2,] %in% test_in_both[2,])
+          rm2 <- which(test_in_one[2,] %in% test_in_both[1,] & test_in_one[1,] %in% test_in_both[2,])
+          rmu <- unique(c(rm1,rm2))
+          test_in_one <- test_in_one[,-c(rmu)]
           idx <- ((test_in_one[1,]-1)*ncol(prog.markers)) + test_in_one[2,]
           all.m[idx] <- all.m[idx] +1
         } else{
@@ -133,46 +142,50 @@ extract_selections <- function(map.info, cross.design, past.tgv,
         }
       }
     }
-    proc.time() - pt
     
     all.m <- all.m/(nrow(prog.markers)*2)
     g.mat <- (matrix(all.m, nrow = ncol(prog.markers), ncol = ncol(prog.markers),byrow = F))
-    
     rm(all.m); gc(full=T,reset=T)
     diag(g.mat) <- 1
-  
-    #pt <- proc.time()
     cc <-  Rfast::transpose(g.mat)[upper.tri( Rfast::transpose(g.mat), diag = F)]
-    g.mat <- Rfast::upper_tri.assign(x= g.mat,v = cc, diag = F)
-    #proc.time()-pt
+    g.mat <- Rfast::upper_tri.assign(x= g.mat,v = cc, diag = F); rm(cc)
+
     A <- as_tibble(as.matrix(getA(ped)))
     A = A[match(names(prog.phenos), colnames(A)), match(names(prog.phenos),  colnames(A))]
     the.data <- as.matrix(g.mat)*.99 + as.matrix(A) * 0.01
-    rm(g.mat,A); gc(full=T,reset = T)
-  pt <- proc.time()
+    rm(g.mat,A); gc(full=T,reset = T,verbose = F)
     the.data <- solve(the.data)
-proc.time() - pt
     n.col <- ncol(the.data)
     h.2 <- var(prog.genetic.values)/var(prog.phenos)
     lambda <- (1 - h.2)/h.2
     I <- diag(n.col)
     DD <- rbind(cbind(n.col, t(rep(1, n.col))), cbind(rep(1, n.col), (I + (lambda * the.data))))
     CC <- matrix(c(sum(prog.phenos),  c(as.vector(prog.phenos))))
-pt <- proc.time()
-sol <- solve(DD,CC)
-proc.time() - pt
-    rm(I,the.data,DD,CC); gc(full=T,reset=T)
+    
+    sol <- solve(DD,CC)
+    rm(I,the.data,DD,CC); gc(full=T,reset=T,verbose = F)
+    
     sol <- sol[-1, 1]
-    gprogeny.blups1 <- unlist(sol)
-    names(gprogeny.blups1) <- names(prog.phenos)
+    progeny.blups <- unlist(sol)
+    names(progeny.blups) <- names(prog.phenos)
     first <- 1
     last <- prog.percross
     mean.progeny.blups <- vector()
     for (each in 1:nrow(current.cross.design)) {
-      mean.progeny.blups <- c(mean.progeny.blups, mean(gprogeny.blups1[first:last]))
+      mean.progeny.blups <- c(mean.progeny.blups, mean(progeny.blups[first:last]))
       first <- last + 1
       last <- first + prog.percross - 1
     }
+  
+    first <- 1
+    last <- prog.percross
+    mean.progeny.phenos <- vector()
+    for (each in 1:nrow(current.cross.design)) {
+      mean.progeny.phenos <- c(mean.progeny.phenos, mean(prog.phenos[first:last]))
+      first <- last + 1
+      last <- first + prog.percross - 1
+    }
+    
     sorted.mean.progeny.blups <- sort(mean.progeny.blups, decreasing = T)
     top.280.families <- match(sorted.mean.progeny.blups,  mean.progeny.blups)
     the.selections <- vector()
@@ -180,7 +193,7 @@ proc.time() - pt
     for (family in 1:length(current.cross.design[, 3])) {
       num.offspring <- as.numeric(current.cross.design[family,  3])
       last.in.family <- num.offspring + first.in.family -  1
-      temp <- (gprogeny.blups1[first.in.family:last.in.family])
+      temp <- (progeny.blups[first.in.family:last.in.family])
       sorted <- sort(temp, decreasing = TRUE)
       best.one <- which(temp == sorted[1:num.selections.within.family])
       selected <- best.one + first.in.family - 1
@@ -226,54 +239,34 @@ proc.time() - pt
   }
   
   {
-    selection.phenos <- prog.phenos[the.selections]
-    new.pars.genval <- prog.genetic.values[the.selections]
-    if (among.family.selection == "GBLUP") {selection.EBVs <- gprogeny.blups1[the.selections]  
-    } else {
-      selection.EBVs <- progeny.blups[the.selections]
-    }
-    sorted.top192 <- sort(selection.phenos, decreasing = T)
+    selection.phenos <- prog.phenos[names(the.selections)]
+    new.pars.genval <- prog.genetic.values[names(the.selections)]
+    selection.EBVs <- progeny.blups[names(the.selections)]
+    
     if (generation == 1) {
-      if (reduced) {
         all.phenos <- c(parent.info$phenos, selection.phenos)
         all.genetic.vals <- c(parent.info$genetic.values, 
                               new.pars.genval)
-      } else {
-        all.phenos <- c(past.phenos$phenos, selection.phenos)
-        all.genetic.vals <- c(past.phenos$genetic.values, 
-                              new.pars.genval)
-      }
     } else {
       all.phenos <- c(parent.info$all.phenos, selection.phenos)
       all.genetic.vals <- c(parent.info$all.genetic.vals, new.pars.genval)
     }
     ped <- full.ped[match(names(all.phenos), full.ped[, 1]), ]
-    colnames(progeny.info$genos.3d) <- names(prog.phenos)
-    new.parent.genos <- progeny.info$genos.3d[, the.selections,]
+    new.parent.genos <- progeny.info$genos.3d[, names(the.selections),]
     numselections <- dim(new.parent.genos)[2]
-    select.ids <- as.numeric(names(new.pars.genval)) - numparents
     select.ped.ids <- as.numeric(names(new.pars.genval))
-    if (generation == 1) {
-      if(length(dim(new.parent.genos)) < 3){
+
+    if(length(dim(new.parent.genos)) < 3){
         all.markers1 <- cbind(parent.info$genos.3d[marker.loci,,1], new.parent.genos[marker.loci, 1])
         colnames(all.markers1) <- c(colnames(parent.info$genos.3d[marker.loci,,1]),select.ped.ids)
         all.markers2 <- cbind(parent.info$genos.3d[marker.loci,,2], new.parent.genos[marker.loci, 2])
         colnames(all.markers2) <- c(colnames(parent.info$genos.3d[marker.loci,,2]),select.ped.ids)
         all.markers <- abind(all.markers1, all.markers2, along = 3)
       } else {
-        colnames(new.parent.genos) <- select.ped.ids
         all.markers1 <- cbind(parent.info$genos.3d[marker.loci,,1], new.parent.genos[marker.loci, ,1])
         all.markers2 <- cbind(parent.info$genos.3d[marker.loci,, 2], new.parent.genos[marker.loci, ,2])
       }
-      all.markers <- abind(all.markers1, all.markers2, along = 3)
-    } else {
-      colnames(new.parent.genos) <- select.ped.ids
-      all.markers1 <- cbind(parent.info$genos.3d[marker.loci,,1], 
-                            new.parent.genos[marker.loci, , 1])
-      all.markers2 <- cbind(parent.info$genos.3d[marker.loci,,2], 
-                            new.parent.genos[marker.loci, , 2])
-      all.markers <- abind(all.markers1, all.markers2, along = 3)
-    }
+    all.markers <- abind(all.markers1, all.markers2, along = 3)
     f.ped <- pedigree(label = full.ped[, 1], sire = full.ped[,2], dam = full.ped[, 3])
     pedigree.inbreeding <- inbreeding(f.ped)
     names(pedigree.inbreeding) <- full.ped[, 1]
@@ -297,30 +290,15 @@ proc.time() - pt
   
   if (relationship.matrix.type == "pedigree") {
     if (generation == 1) {
-      ff <- cbind(label = f.ped@label, sire = f.ped@sire, dam = f.ped@dam)
-      ff <- data.frame(ff,stringsAsFactors = F)
-      l <- which(ff$label %in% names(selection.phenos))
-      rmv <- rep(F,nrow(ff))
-      rmv[l] <- T
-      A <- makeA(ff,which = rmv)
-      A <- read.table("A.txt")
-      A <- spread(A,V1,V3)
-      A <- A[,-1]
-      colnames(A) <- ff$label[l]; rownames(A) <- ff$label[l]
-      A[lower.tri(A, diag = F)] <-  t(A)[lower.tri( t(A), diag = F)]
+     ff <- getA(f.ped)
+     A <- data.frame(as.matrix(ff),stringsAsFactors = F)
+     colnames(A) <- rownames(A)
     }  else {
       selection.ped <- cross.design$selection.ped
-      ff <- cbind(id = selection.ped[, 1], sire = selection.ped[,2], dam = selection.ped[, 3])
-      ff <- data.frame(ff,stringsAsFactors = F)
-      l <- which(ff$id %in% names(selection.phenos))
-      rmv <- rep(F,nrow(ff))
-      rmv[l] <- T
-      A <- makeA(ff,which = rmv)
-      A <- read.table("A.txt")
-      A <- spread(A,V1,V3)
-      A <- A[,-1]
-      colnames(A) <- ff$id[l]; rownames(A) <- ff$id[l]
-      A[lower.tri(A, diag = F)] <-  t(A)[lower.tri( t(A), diag = F)]
+     f.ped2 <- pedigree(label=selection.ped[,1],sire=selection.ped[,2],dam=selection.ped[,3])
+     A <- getA(f.ped2)
+     A <- data.frame(as.matrix(A),stringsAsFactors = F)
+     colnames(A) <- rownames(A)
     }
     l <- match(names(selection.phenos), rownames(A))
     rel.mat <- A[l, l]
@@ -340,14 +318,19 @@ proc.time() - pt
       unique.markers <-  unique(c(prog.markers[all.markers,,1],prog.markers[all.markers,,2]))
       
       for(each.marker in 1:length(unique.markers)){
-        these.in.both <- which(prog.markers[all.markers,,1] %in% unique.markers[each.marker] & prog.markers[all.markers,,2] %in% unique.markers[each.marker])
+        these.in.both <- which(prog.markers[all.markers,,1] %in% unique.markers[each.marker] 
+                               & prog.markers[all.markers,,2] %in% unique.markers[each.marker])
         if(length(these.in.both) > 1){
           test_in_both <- comb_n(n = these.in.both,k = 2)
-          these.in.one <-  which(prog.markers[all.markers,,1] %in% unique.markers[each.marker] | prog.markers[all.markers,,2] %in% unique.markers[each.marker] )
-          test_in_one <- comb_n(n = these.in.one,k = 2)
-          test_in_one <- test_in_one[,-c(which(test_in_one[1,] %in% these.in.both))]
           idx <- ((test_in_both[1,]-1)*ncol(prog.markers)) + test_in_both[2,]
           all.m[idx] <- all.m[idx] +2
+          these.in.one <-  which(prog.markers[all.markers,,1] %in% unique.markers[each.marker]  | prog.markers[all.markers,,2] %in% unique.markers[each.marker] )
+          test_in_one <- comb_n(n = these.in.one,k = 2)
+          
+          rm1 <- which(test_in_one[1,] %in% test_in_both[1,] & test_in_one[2,] %in% test_in_both[2,])
+          rm2 <- which(test_in_one[2,] %in% test_in_both[1,] & test_in_one[1,] %in% test_in_both[2,])
+          rmu <- unique(c(rm1,rm2))
+          test_in_one <- test_in_one[,-c(rmu)]
           idx <- ((test_in_one[1,]-1)*ncol(prog.markers)) + test_in_one[2,]
           all.m[idx] <- all.m[idx] +1
         } else{
@@ -381,7 +364,7 @@ proc.time() - pt
                           selection.phenos = selection.phenos, ped = ped, prog.inbred.level = progeny.inbreeding, 
                           select.inbred.level = selections.inbreeding, genos.3d = new.parent.genos, 
                           num.parents = numselections, select.genval = new.pars.genval, 
-                          fullped = full.ped, par.ids = select.ids, select.ped.ids = select.ped.ids, 
+                          fullped = full.ped, select.ped.ids = select.ped.ids, 
                           all.markers = all.markers, all.phenos = all.phenos, cumulative.total = cross.design$cumul.total)
   cat("The returned object is a list containing a matrix of phenotypic data with\n")
   cat("the specified heritability, a vector of unscaled true genetic values,\n")

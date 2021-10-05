@@ -160,5 +160,6 @@ chromo.last.loci.index <-  unlist(lapply(1:num.chromos,function(x) {
     },mc.cores=num.cores)
     gametes2 <- matrix(unlist(gametes2), ncol = num.crosses*mean(as.numeric(cross_design[,3])))
     genos.3d <- abind(gametes1,gametes2,along = 3)
+    colnames(genos.3d) <- cross.design$progeny.pedigree[,1]
     out <- list(genos.3d=genos.3d)
   return(out)}

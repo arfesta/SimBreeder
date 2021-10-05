@@ -22,33 +22,52 @@
 #Extract OP genotypic values####
 OP_testing <- function(map.info,parent.info,parent.phenos,parents.TGV,cross.prog = 1,dom.coeff,A,a,
                        h2, E.var = NULL, n.cores= 2 ) {
-  library(abind)
-  num.pars <- parent.info$num.parents                    
+  library(abind); library(parallel)
+
+### Generate OP cross design ####
+  # Retrieve number of parents
+  num.pars <- parent.info$num.parents          
+  
+  # Create string to hold crosses for p1 and p2
   parent1 <-  rep(1:num.pars,each=(num.pars-1)); parent2 <- vector()
+  
+  # Fill parent 2 as every other parent except the ith parent
   for(i in 1:num.pars){
     all.parents <- 1:num.pars
     parent2 <- c(parent2,all.parents[-i])
     }
-  progeny <- rep(cross.prog,length(parent2))
-  OP.crosses <- data.frame(par1=parent1,par2=parent2,num.prog=progeny)
   
-  # Get last locus per chromosome:
+  # Create vector to hold number of progeny to create
+  progeny <- rep(cross.prog,length(parent2))
+  
+  # Finish cross design for OP
+  OP.crosses <- data.frame(par1=parent1,par2=parent2,num.prog=progeny)
+
+### Data for calculating gval ####    
+  # Subset the number of chromosome
   num.chromos = as.numeric(length(unique(map.info$chr)))
+  
+  # Get index of last loci for each chromosome
   chromo.last.loci.index <-  unlist(lapply(1:num.chromos,function(x) {
      this.chrom <- paste0("chr",x)
      max(which(map.info$chr == this.chrom))
    }))
-  QTLSNPs      <- which(map.info$types == "snpqtl") # Vector of loci which are snpqtl
+  
+  # Vector of loci which are snpqtl
+  QTLSNPs      <- which(map.info$types == "snpqtl")
+  
   # determine number of loci per chromosome
   loci.per.chromo <- unlist(lapply(1:num.chromos,function(x){
     this.chrom <- paste0("chr",x)
     length(which(map.info$chr == this.chrom))
   }))
-  
-
-    library(parallel)
+ 
+### Estimate genetic value for each cross #### 
     g.val <- mclapply(1:nrow(OP.crosses),mc.cores = n.cores,FUN = function(x,crosses=OP.crosses){
+      # subset this cross 
       y= crosses[x,]
+      
+      # subset parent genotypes for this cross 
       par1<-match(y[1],colnames(parent.info$genos.3d)) # assigns par1 to be the first parent in crossdesign matrix
       par2<-match(y[2],colnames(parent.info$genos.3d)) # assigns par2 to be the second parent in the crossdesign matrix
       cross.prog<-as.numeric(y[3]) #assigns number of progeny to be the third column for cross "X"
@@ -62,6 +81,7 @@ OP_testing <- function(map.info,parent.info,parent.phenos,parents.TGV,cross.prog
       par1.alleles <- (parent.info$genos.3d[,par1,])
       par2.alleles <- (parent.info$genos.3d[,par2,])
       
+      # Create recombination breakpoints for each cross
       chr.ind.r <- vector("list")
       for(each in 1:cross.prog){ # For each progeny we are going to do the following
         first.pos <- 1           # Specify the first position to be row 1 on the genetic map
@@ -168,12 +188,9 @@ OP_testing <- function(map.info,parent.info,parent.phenos,parents.TGV,cross.prog
       
      # Dominance coefficient *h* of 1 means bad allele dominance, 0 mean good allele dominance
     difference <- A-a
-    QTLSNPaa <- sapply(1:length.prog,function(x){
-      A*length(which(QTLSNP.num[,x,1]=="a" & QTLSNP.num[,x,2]=="a"))},simplify = T)
-    QTLSNPcc <- sapply(1:length.prog,function(x){
-      a*length(which(QTLSNP.num[,x,1]=="c" & QTLSNP.num[,x,2]=="c"))},simplify = T)
-    QTLSNPac <- sapply(1:length.prog,function(x){
-      (A-(difference*dom.coeff))  * length(which(QTLSNP.num[,x,1]=="a" & QTLSNP.num[,x,2]=="c"|QTLSNP.num[,x,1]=="c" & QTLSNP.num[,x,2]=="a"))},simplify = T)
+    QTLSNPaa <- A*length(which(QTLSNP.num[,1]=="a" & QTLSNP.num[,2]=="a"))
+    QTLSNPcc <- a*length(which(QTLSNP.num[,1]=="c" & QTLSNP.num[,2]=="c"))
+    QTLSNPac <- (A-(difference*dom.coeff))  * length(which(QTLSNP.num[,1]=="a" & QTLSNP.num[,2]=="c"|QTLSNP.num[,1]=="c" & QTLSNP.num[,2]=="a"))
   
   QTLSNP.values <- QTLSNPaa+QTLSNPcc+QTLSNPac
       
@@ -182,15 +199,15 @@ OP_testing <- function(map.info,parent.info,parent.phenos,parents.TGV,cross.prog
       
       
       # Genetic values of progeny
-      #genetic.values <- sum(QTLSNP.values[,1]) + finalqtl
-      genetic.values <- sum(QTLSNP.values[,1]) + sum(par.QTL.allele1) + sum(par.QTL.allele2)
-      genetic.values
+      genetic.value <- sum(QTLSNP.values) + sum(par.QTL.allele1) + sum(par.QTL.allele2)
+      genetic.value
     })
   
   g.val <- unlist(g.val)
   total.indiv <- length(g.val)
   if(length(E.var) > 0){ phenos <- g.val + rnorm(total.indiv,mean = 0,sd = E.var) } else {
-    phenos <- g.val + rnorm(total.indiv,mean = 0,sd = sqrt(var(g.val)/h2))}
+    phenos <- g.val + rnorm(total.indiv,mean = 0,sd = sqrt(var(g.val)/h2 - var(g.val)))
+    }
   
   mean.gval <- vector()
   first <- 1
@@ -198,7 +215,8 @@ OP_testing <- function(map.info,parent.info,parent.phenos,parents.TGV,cross.prog
   for(i in 1:num.pars){
     mean.gval <- c(mean.gval,mean(g.val[first:last]))
     first <- last+1
-    last <- first + num.pars-2} 
+    last <- first + num.pars-2
+    } 
   
   
   mean.phenos <- vector()
