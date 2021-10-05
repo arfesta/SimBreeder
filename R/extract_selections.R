@@ -1,4 +1,4 @@
-extract_selections <- function(map.info, cross.design, past.tgv, 
+extract_selections <- function(map.info, cross.design, past.tgv,
                                past.phenos, parent.info, progeny.info, progeny.TGV, progeny.phenos, 
                                selection.strategy, among.family.selection, within.family.selection = NULL, 
                                num.selections.within.family = 1, num.selections.among.family = NULL, 
@@ -21,7 +21,6 @@ extract_selections <- function(map.info, cross.design, past.tgv,
     prog.percross <- as.numeric(current.cross.design[1,3])
     prog.pedigree <- cross.design$progeny.pedigree
     generation <- as.numeric(prog.pedigree[1, 4])
-    numparents <- cross.design$num.parents
     full.ped <- cross.design$full.pedigree
     selection.ped <- cross.design$selection.ped
     if (generation == 1) {
@@ -227,6 +226,7 @@ extract_selections <- function(map.info, cross.design, past.tgv,
       temp <- (progeny.blups[first.in.family:last.in.family])
       sorted <- sort(temp, decreasing = TRUE)
       best.one <- which(names(temp) == names(sorted[1:num.selections.within.family]))
+      if(length(best.one) == 1){names(best.one) <- names(temp)[best.one]}
       selected <- best.one + first.in.family - 1
       the.selections <- c(the.selections, selected)
       first.in.family <- last.in.family + 1
@@ -244,8 +244,8 @@ extract_selections <- function(map.info, cross.design, past.tgv,
     selection.EBVs <- progeny.blups[names(the.selections)]
     
     if (generation == 1) {
-      all.phenos <- c(parent.info$phenos, selection.phenos)
-      all.genetic.vals <- c(parent.info$genetic.values, 
+      all.phenos <- c(past.phenos$phenos, selection.phenos)
+      all.genetic.vals <- c(past.tgv$genetic.values, 
                             new.pars.genval)
     } else {
       all.phenos <- c(parent.info$all.phenos, selection.phenos)
