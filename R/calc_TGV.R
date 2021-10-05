@@ -8,25 +8,21 @@
 #' @param a Value assigned to the Minor SNPQTL allele
 #' @param dom.coeff The dominance coeffcient used for SNPQTLs
 #' @param founder logical. Only should be set to true for founder population.
-#' @param prefix Name prefix to add to ouptut if save = TRUE. Default does not write output
-#' @param save logical. Saves the output of genetic map (Default: FALSE)
+#' @param rqtl.dom The dominance coeffcients used for random qtl
 #' @keywords progeny genetic value
 #' @export
 #' @examples
-#' progeny1.TGV <- calc_TGV(geno.info = progeny1, map.info = the.map, crossdesign = cross.file,
-#' A = 1, a = -100, dom.coeff = 1)
+#' parents.TGV <- calc_TGV(geno.info = parents,map.info = genetic.map,A = 1,a = -100,dom.coeff = 0,founder = T)
 
 ####Create TGV2####
-calc_TGV <- function(geno.info, map.info, cross.design=NULL, A,a, dom.coeff, founder=F, rqtl.dom=NULL,
-                             save=F, prefix=NULL){
+calc_TGV <- function(geno.info, map.info, cross.design=NULL, A,a, dom.coeff, founder=F, rqtl.dom=NULL){
 
   QTLSNPs <- which(map.info$types %in% c("snpqtl"))      # A vector of the loci which are snpqtl
   QTLSNP.num <- geno.info$genos.3d[QTLSNPs,,] # genotypes of both alleles pulled from the current generation
   markers <- which(map.info$types %in% c("m"))# a list of all the markers pulled from map object
   num.markers <- length(markers) # length of markers that were selected
-  markers.select <- sort(sample(markers,num.markers,replace=F),decreasing=F)
-  marker.select.genos <- geno.info$genos.3d[markers.select,,] # genotypes of the markers pulled from the current generation
-  map.markers <- map.info[markers.select,c("chr","pos")]
+  marker.select.genos <- geno.info$genos.3d[markers,,] # genotypes of the markers pulled from the current generation
+  map.markers <- map.info[markers,c("chr","pos")]
   num.QTL <- length(which(map.info$types %in% c("qtl"))  ) # the number of additive qtl
   rQTL <- which(map.info$types %in% c("qtl"))  # the number of additive qtl
 
@@ -66,7 +62,7 @@ calc_TGV <- function(geno.info, map.info, cross.design=NULL, A,a, dom.coeff, fou
     marker.values[markers.ca[[i]],i] <- "1"}
 
   marker.values <- t(marker.values)
-  colnames(marker.values) <- markers.select
+  colnames(marker.values) <- markers
   rownames(marker.values) <- par.IDs
   par.QTL.allele1 <- matrix(as.integer(geno.info$genos.3d[rQTL,,1]),nrow=num.QTL,ncol=num.parents)
   colnames(par.QTL.allele1) <- c(par.IDs)
@@ -108,6 +104,6 @@ calc_TGV <- function(geno.info, map.info, cross.design=NULL, A,a, dom.coeff, fou
     }
   names(genetic.values) <- par.IDs
 
-  TGV <- list(genetic.values=genetic.values, SNP.value.matrix=QTLSNP.values,markers.matrix=marker.values, marker.loci=markers.select, marker.map=map.markers)
+  TGV <- list(genetic.values=genetic.values, SNP.value.matrix=QTLSNP.values,markers.matrix=marker.values, marker.loci=markers, marker.map=map.markers)
   return(TGV)
   }
