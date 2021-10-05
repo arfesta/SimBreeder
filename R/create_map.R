@@ -12,17 +12,16 @@
 #' @param snp.qtl.maf A vector of 2 numbers indiciating the min and max range of SNP QTL MAFs
 #' @param marker.maf Default is Null. Unless specified markers MAFs will be drawn from beta distribution
 #' @param chromosome.size.range The chromosome size range from the mean length of chromosomes (Default: 0.2)
-#' @param seed logical. Set seed so that genetic map is the same every time (Default: FALSE)
 #' @param save logical. Saves the output of genetic map (Default: FALSE)
 #' @keywords cat
 #' @export
 #' @examples
-#' create_genetic_map(num.chromos = 12, map.length = 1800, num.markers = 120, total.loci = signif((120+2500)/12,digits = 2)*12, total.qtl = 2500, num.snpqtl = 1960)
+#'  create_genetic_map(save=T,num.chromos = 12,map.length = 1800,num.markers = 120,total.qtl = 120, num.snpqtl = 120,distribute.loci = "even",marker.distribution = "equally-spaced",snp.qtl.maf = c(0.01,0.02))
 
 #Create Map Function####
 create_genetic_map <- function(num.chromos, map.length, num.markers, total.qtl, num.snpqtl,
                                map.dist = "haldane", distribute.loci = NULL, marker.distribution =NULL,
-                               total.loci = NULL, marker.maf=NULL, snp.qtl.maf= NULL, chromosome.size.range=.2, seed=F, save=F) {
+                               marker.maf=NULL, snp.qtl.maf= NULL, chromosome.size.range=.2, save=F) {
 
   #Determine average length of a chromosome
   avg.chromo.size <- map.length / num.chromos
@@ -106,7 +105,6 @@ create_genetic_map <- function(num.chromos, map.length, num.markers, total.qtl, 
   # Specify in map data frame that all loci which are not qtl or snpqtl are markers
   MAFs <- sample(rbeta(200000,.4,.4),total.loci,replace=F)
   MAFs[which(MAFs > .5)] <- 1- MAFs[which(MAFs > .5)]
-  #MAFs <- sample(runif(totalloci,.2,.49),size = totalloci)
   map$MAF <- sample(MAFs,length(map$MAF),replace=F) # Assign minor allele frequencies to markers and qtl
 
   SNPQTL <- sample(all.loci[-markers],num.snpqtl,replace=FALSE)
@@ -124,20 +122,20 @@ create_genetic_map <- function(num.chromos, map.length, num.markers, total.qtl, 
 
   #Now save map output:
   datevalue <- date()
-  datevector <- unlist(strsplit(datevalue,"\\s"))
-  timevector <- unlist(strsplit(datevector[4],":"))
+  datevector <- unlist(strsplit(datevalue," "))
+  timevector <- unlist(strsplit(datevector[5],":"))
   newtime <- paste(timevector[1],timevector[2],sep="h")
-  newdate <- paste(datevector[3],datevector[2],datevector[5],sep="")
+  newdate <- paste(datevector[2],datevector[4],datevector[6],sep="_")
   namestem <- paste(newdate,newtime,sep="_")
 
   if(save){
-    mapname<-paste(namestem,"_map.txt")
+    mapname<-paste(namestem,"_genetic_map.txt")
     write.table(map,file=mapname, quote=F, row.names=F, col.names=T, sep="\t")}
 
   #mapinfo<-list(genetic.map=map, total.loci.num=total.loci,total.qtl.num=total.qtl, total.SNPQTL.num=num.snpqtl,
   #              QTLSNP.loci=sort(SNPQTL),date.time=namestem, rQTL.loci=sort(rQTL), available.Markers=markers,last.locus.per.chrom=chromo.loci.index)
-  #cat("The returned object is a list containing:\n")
-  #cat("Genetic map = a data.frame of 7 columns: chr, locus names, intervals, types (marker, snp, or qtl), MAFs, position, and recombination fractions;\n")
+  cat("The returned object is a list containing:\n")
+  cat("Genetic map = a data.frame of 7 columns: chr, locus names, intervals, types (marker, snp, or qtl), MAFs, position, and recombination fractions;\n")
   return(map)
   # End of function #
 }
