@@ -1,7 +1,7 @@
 #' Make crosses
 #'
 #' This function makes crosses among parents in a format specified by the cross design file
-#' @param parent.info Object returned from create_parents()
+#' @param parent.info Object returned from create_parents() or extract_selections()
 #' @param map.info Object returned from create_genetic_map()
 #' @param cross.design Object returned from create_cross_design()
 #' @param num.cores The number of cores to use if running in parallel
@@ -55,11 +55,7 @@ make_crosses <- function(parent.info,map.info,cross.design, num.cores = num.of.c
       for(i in 1:length(chromo.last.loci.index)){ # Now for each chromosome do the following
         last.pos <- chromo.last.loci.index[i]     # Subset the last position of this chromosome
         l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
-        #t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F)  # Sample a range of frequencies to test against rec. freqs
-        #l <- which(t < map.info$recfreqs[first.pos:last.pos])  # Identify which of the sampled numbers were less than the rec. freq
         while(length(l) < 1){   # If none were less than rec. freq, sample again
-          #t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F) 
-          #l <- which(t < map.info$recfreqs[first.pos:last.pos])
           l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
         }
         ch.r[[i]] <- seq(first.pos,last.pos,1)[l+1] # Now subest those positions from the loci to find which loci will recombine
@@ -119,11 +115,7 @@ make_crosses <- function(parent.info,map.info,cross.design, num.cores = num.of.c
       for(i in 1:length(chromo.last.loci.index)){ # Now for each chromosome do the following
         last.pos <- chromo.last.loci.index[i]     # Subset the last position of this chromosome
         l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
-        #t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F)  # Sample a range of frequencies to test against rec. freqs
-        #l <- which(t < map.info$recfreqs[first.pos:last.pos])  # Identify which of the sampled numbers were less than the rec. freq
         while(length(l) < 1){   # If none were less than rec. freq, sample again
-          #t <- sample(seq(0,1,.0001),loci.per.chromo[i],replace = F) 
-          #l <- which(t < map.info$recfreqs[first.pos:last.pos])
           l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
         }
         ch.r[[i]] <- seq(first.pos,last.pos,1)[l+1] # Now subest those positions from the loci to find which loci will recombine
