@@ -35,7 +35,6 @@ calc_TGV <- function(geno.info, map.info, cross.design=NULL, A,a, dom.coeff, fou
 
   num.SNPQTL <- length(QTLSNPs)
   num.parents <- length(par.IDs) # the number of parents
-  #QTLSNP.values <-matrix(NA,nrow=num.SNPQTL,ncol=num.parents) # matrix to hold snpqtl values
   marker.values <- matrix(NA,nrow=num.markers,ncol=num.parents) # matrix to hold marker values
   capital.genotypes <- vector()
   lowercase.genotypes <- vector()
@@ -69,13 +68,10 @@ calc_TGV <- function(geno.info, map.info, cross.design=NULL, A,a, dom.coeff, fou
   marker.values <- t(marker.values)
   colnames(marker.values) <- markers.select
   rownames(marker.values) <- par.IDs
-  #removed marker.vals from return (markers.matrix=marker.values)
   par.QTL.allele1 <- matrix(as.integer(geno.info$genos.3d[rQTL,,1]),nrow=num.QTL,ncol=num.parents)
   colnames(par.QTL.allele1) <- c(par.IDs)
   par.QTL.allele2 <- matrix(as.integer(geno.info$genos.3d[rQTL,,2]),nrow=num.QTL,ncol=num.parents)
   colnames(par.QTL.allele2) <- c(par.IDs)
-  #QTLvalues     <- matrix(paste(par.QTL.allele1,par.QTL.allele2,sep=","),nrow=num.QTL,ncol=num.parents)
-  #dimnames(QTLvalues)<-list(map.info$[map.info$rQTL],par.IDs)
   
   if(length(rqtl.dom) > 0){
     equal.rqtls <- which(par.QTL.allele1 == par.QTL.allele2)
